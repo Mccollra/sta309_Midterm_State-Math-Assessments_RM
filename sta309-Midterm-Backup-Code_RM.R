@@ -1,14 +1,16 @@
 #####################################
-###
+### sta309_Midterm-Dashboard_RM
+## Ryan McCollum
+## 4/26/2023
 ##
 ##
 ##
-##
-##
-##
+## Evaluating the Effects of Economic Disparities on State Math Tests
 
 
 
+
+## NOTE: You might need to install this package
 #install.packages("cowplot")
 library(tidyverse)
 library(ggrepel)
@@ -20,7 +22,7 @@ library(scales)
 library(cowplot)
 
 
-### Loading in file
+### Loading in files
 all_SD_math_20_21 <- read.csv("math-achievement-lea-sy2020-21.csv") %>% 
   group_by(LEAID) %>%
   filter(GRADE == "00") %>%
@@ -33,10 +35,11 @@ all_SD_math_20_21 <- read.csv("math-achievement-lea-sy2020-21.csv") %>%
 
 ## Economic Disadvantages by State
 
+## Map data set
 US_states <- map_data("state") %>%
   mutate(region=str_to_upper(region))
 
-
+## Data set with all valid entries for each school
 US_total_district_math <- all_SD_math_20_21 %>%
   na.omit(all_SD_math_20_21) %>%
   group_by(LEANM) %>%
@@ -46,10 +49,12 @@ US_total_district_math <- all_SD_math_20_21 %>%
          all_valid = NUMVALID) %>%
   select(LEAID, all_valid, TotalPctProf, STNAM)
 
+## Data set with only ECD entries
 US_ECD_math <- all_SD_math_20_21 %>% 
   filter(CATEGORY =="ECD",
          GRADE == "00")
 
+## Merging ECD and ALL data sets by school district
 US_compare_ECD <- merge(US_ECD_math, US_total_district_math,
                         by.x="LEAID", by.y="LEAID") %>%
   group_by(STNAM.x) %>%
@@ -63,11 +68,12 @@ US_compare_ECD <- merge(US_ECD_math, US_total_district_math,
   filter(STNAM.x != "BUREAU OF INDIAN EDUCATION") %>% 
   select(SCHOOL_YEAR, STNAM, avg_mathProf, PCT_ECD) 
 
-
+## Merging compare_ECD data set with Map
 US_ECD_states <- US_compare_ECD %>%
   left_join(US_states, by=c("STNAM"="region"))
 
 
+## Plotting data 
 USA_ECD_math_plot <- ggplot(US_ECD_states, aes(x=long, y=lat, 
                                                group=group, fill=PCT_ECD)) +
   geom_polygon(color="grey30") + 
@@ -78,21 +84,22 @@ USA_ECD_math_plot <- ggplot(US_ECD_states, aes(x=long, y=lat,
   annotate(geom="text", x=-120, y=47.5, label="N/A", size=1) +
   theme_map() +
   theme(legend.position = "none",
-        plot.title=element_text(hjust=0, size=12),
+        plot.title=element_text(hjust=0, size=11.5),
         plot.subtitle=element_text(hjust=0, size=8)) +
   labs(title = "2020-2021 Proportion of Student Entries that are \"Economically Disadvantaged\"",
        subtitle="The number of valid math test entries that were labeled as taken by an \"Economically Disadvantaged\"\n(ECD)  were divided by the total number of valid math test entires from each state to get the\npercentage of entries in each state taken by ECD students. \nNOTES: Washington did not have and school districts with valid entries\n             All of Illinois' entries were labeled as \"ECD\"")
-#USA_ECD_math_plot
+USA_ECD_math_plot
 
 
-
-
+## Ohio Map data set
 ohio_map <- map_data("county") %>%
   filter(region=="ohio")
+## I edited the CSV in excel to add the generalRegion variable
+##    to each Ohio School district
 ## write.csv(ohio_map, "ohio_map_counties.csv")
 
 
-
+## All valid entries in each Ohio school district
 ohio_total_district_math <- all_SD_math_20_21 %>%
   na.omit(all_SD_math_20_21) %>%
   group_by(LEANM) %>%
@@ -103,7 +110,7 @@ ohio_total_district_math <- all_SD_math_20_21 %>%
   mutate(District_ID = LEAID - 3900000) %>%
   select(LEANM, all_valid, PCTPROF, CATEGORY, STNAM, GRADE, LEAID, District_ID)
 
-
+## All ECD entries in each Ohio school district
 ohio_ECD_math <- all_SD_math_20_21 %>% 
   filter(STNAM=="OHIO",
          CATEGORY =="ECD",
@@ -111,6 +118,11 @@ ohio_ECD_math <- all_SD_math_20_21 %>%
   mutate(District_ID = LEAID - 3900000) %>%
   select(LEAID, LEANM, NUMVALID, CATEGORY, District_ID)
 
+
+
+## Merging ECD and ALL data sets by school district
+##    Creating new variable that determines if more than 50% 
+##    of all entries were labeled as ECD for each Ohio school district
 ohio_compare_ECD_math <- merge(ohio_ECD_math, ohio_total_district_math,
                                by.x="LEAID", by.y="LEAID") %>%
   mutate(PCT_ECD = NUMVALID / all_valid,
@@ -122,6 +134,7 @@ ohio_compare_ECD_math <- merge(ohio_ECD_math, ohio_total_district_math,
   select(SCHOOL_YEAR, STNAM, GRADE, CATEGORY, PCTPROF, LEAID, PCT_ECD, District_ID, NUMVALID, all_valid)
 
 
+## Making box plot
 ohio_box <- ggplot(data=ohio_compare_ECD_math) +
   geom_boxplot(aes(x=CATEGORY, y=PCTPROF), 
                color=c("forestgreen", "firebrick"), size=0.75) +
@@ -133,46 +146,49 @@ ohio_box <- ggplot(data=ohio_compare_ECD_math) +
   theme_minimal() +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank(),
-        plot.title=element_text(hjust=0, size=12, face="bold"),
-        plot.subtitle=element_text(hjust=0, size=8, color="grey30")) +
+        plot.title=element_text(hjust=0, size=11, face="bold"),
+        plot.subtitle=element_text(hjust=0, size=8, color="grey30"),
+        plot.caption=element_text(size=8, hjust=1, face="bold")) +
   labs(title="Proficiency of Economically Advantaged vs. Disadvantaged Schools in Ohio",
-       subtitle= "School districts were labels as \"Majority Economically Disadvantaged\" if more than 50%\nof their valid math test entries were labeled as ECD")
-#ohio_box
+       subtitle= "School districts were labels as \"Majority Economically Disadvantaged\" if more than 50%\nof their valid math test entries were labeled as ECD",
+       caption="SOURCES: US Department of Education\nUS Census")
+ohio_box
 
 
-
-
-
-### Comparing Different Categories
-
+### Comparing different categories
+ 
+## Importing list of all Ohio school districts and their County
 sd_by_county <- read.csv("sdlist_2-21.csv") %>%
   mutate(District_ID = as.numeric(District_ID))
 
+## Importing my version of Ohio map data
 ohio_map_regions <- read.csv("ohio_map_counties.csv") %>%
   mutate(County = subregion)
 
-
-
+## Merging Ohio ECD data with School District County data
 ohio_sd_county_ECD <- merge(sd_by_county, ohio_compare_ECD_math,
                             by.x="District_ID", by.y="District_ID") %>%
   mutate(County = str_to_lower(County)) %>%
   mutate(County = str_remove(County, " county"))
 
+## Getting percent of ECD for each Ohio County
 ohio_ECD_by_county <- ohio_sd_county_ECD %>%
   group_by(County) %>%
   summarize(Total = sum(all_valid),
             Total_ECD = sum(NUMVALID),
             PCT_ECD_County = (Total_ECD / Total)) 
 
+## Adding regions
 ohio_ECD_regions <- merge(ohio_ECD_by_county, ohio_map_regions,
                           by="County")
 
 
-
+## Adding map to ECD data
 ohio_ECD_map <- ohio_ECD_by_county %>%
   left_join(ohio_map_regions, by="County")
 
 
+## Plot
 Ohio_ECD_math_plot <- ggplot(ohio_ECD_map, 
                              aes(x=long, y=lat,group=County, fill=PCT_ECD_County)) +
   geom_polygon(color="grey30") + 
@@ -192,14 +208,12 @@ Ohio_ECD_math_plot <- ggplot(ohio_ECD_map,
         plot.title=element_text(size=8, face="bold")) +
   labs(title="State of Ohio", 
        subtitle="NOTES: Fulton County did not have and school districts with valid entries.\nNot all schools are included, some do not have any ECD entries")
-#Ohio_ECD_math_plot
+Ohio_ECD_math_plot
 
 
+## Making data set and Model for Comparing ECD and PROFPCT Across School Districts and Regions
 
-
-## Making data set and Model for Comparing ECD_ and PROFPCT 
-##    Across School Districts and Regions
-
+## Grabbing data for all Ohio schools with ECD entries
 ohio_all_valid_schools <- ohio_sd_county_ECD %>%
   left_join(ohio_map_regions, by="County") %>%
   mutate(Entries = all_valid) %>%
@@ -207,14 +221,17 @@ ohio_all_valid_schools <- ohio_sd_county_ECD %>%
   unique() %>%
   na.omit()
 
+## Grabbing my high school
 my_high_school <- ohio_all_valid_schools %>%
   filter(District_Name == "Three Rivers Local School District") %>%
   mutate(generalRegion = "My High School")
 
+## Used to change color of legend
 for_legend <- ohio_all_valid_schools %>%
   filter(District_Name == "Three ") %>%
   mutate(generalRegion = "none")
 
+## Finding the best fit model
 ohio.fit_lin <- lm(data=ohio_all_valid_schools, PCTPROF~PCT_ECD)
 #summary(ohio.fit_lin)
 ohio.fit_quad <- lm(PCTPROF~PCT_ECD + I(PCT_ECD^2), data=ohio_all_valid_schools)
@@ -229,23 +246,28 @@ fake_data <- data.frame(
 fake_data <- fake_data %>%
   mutate(PCTPROFT_fine = predict(ohio.fit_cubic, newdata=fake_data, type="response"))
 
-### COMPARING MODELS
-
-    ##ADJR2(ohio.fit_lin) = 0.5661  
-
-    ##ADJR2(ohio.fit_quad) = *0.6047*
-    ##AIC(ohio.fit_quad)  = *3224.412*
-    ##BIC(ohio.fit_quad)  = *3240.713*
-  
-  
-    ##ADJR2(ohio.fit_cubic) = *0.6064* 
-    ##AIC(ohio.fit_cubic) = *3222.618*
-    ##BIC(ohio.fit_cubic) = *3238.92*
-  
-## **Cubic model seems to be the best by just a little**
-  
 
 
+### Comparing Models
+
+   ##ADJR2(ohio.fit_lin) = 0.5661  
+
+   ##ADJR2(ohio.fit_quad) = *0.6047*
+   ## AIC(ohio.fit_quad)  = *3224.412*
+   ## BIC(ohio.fit_quad)  = *3240.713*
+    
+    
+   ## ADJR2(ohio.fit_cubic) = *0.6064* 
+   ## AIC(ohio.fit_cubic) = *3222.618*
+   ## BIC(ohio.fit_cubic) = *3238.92*
+    
+   ## **Cubic model seems to be the best by just a little**
+  
+  
+## Comparing all Ohio Schools with valid ECD entries
+  
+  
+## Plot
 ohio_regions_schools <- 
   ggplot() +
   geom_point(data=ohio_all_valid_schools, aes(x=PCT_ECD, y=PCTPROF, group=District_Name,  
@@ -273,7 +295,7 @@ ohio_regions_schools <-
         legend.title = element_text("Number of valid entries", size=6),
         axis.title.x=element_text(size=7, color="grey40"),
         axis.title.y=element_text(size=7, color="grey40"),
-        plot.title=element_text(size=12, face="bold"),
+        plot.title=element_text(size=11, face="bold"),
         legend.key.width=unit(0.01, "cm"),
         legend.key.size=unit(0.05, "cm"),
         plot.subtitle=element_text(size=8, color="grey30")) +
@@ -294,13 +316,11 @@ ohio_regions_schools <-
            color="navy", size=3, fontface="bold") +
   annotate("segment", x=.76, xend=0.68, y=70, yend=39)
 
-#ohio_regions_schools
-
-
-
+ohio_regions_schools
 
 ## Ohio County Regional Map
 
+## Creating an Ohio plot based on 5 regions for legend purposes
 Ohio_regional <- ggplot(ohio_map_regions, 
                         aes(x=long, y=lat, group=County, fill=generalRegion)) +
   geom_polygon(color="grey30") +
@@ -314,18 +334,13 @@ Ohio_regional <- ggplot(ohio_map_regions,
         axis.title.x = element_blank(),
         axis.title.y=element_blank(),
         plot.title=element_text(size=8, face="bold")) +
+  annotate("point", x=-84.7502 , y=39.2, color="yellow") +
   labs(title="Ohio Counties\nby Region")
-
-#Ohio_regional
-
-
-
-
-
+Ohio_regional
 
 
 # DASHBOARD
-
+## Creating Dashboard
 empty_plot <- ggplot() +
   theme_minimal()
 
@@ -346,5 +361,13 @@ bottom_plot <-
             rel_widths=c(0.5, 0.5))
 
 FINAL_plot <- 
-  plot_grid(top_plot_with_legend, bottom_plot, nrow=2, rel_heights=c(0.60, 0.40))
-FINAL_plot
+  plot_grid(top_plot_with_legend, bottom_plot, nrow=2, rel_heights=c(0.5, 0.50))
+#FINAL_plot
+
+
+
+### Saving Image
+ggsave(filename="sta309_Midterm-Dashboard.png",
+       width=16, height=7, dpi=900, bg="white")
+
+
