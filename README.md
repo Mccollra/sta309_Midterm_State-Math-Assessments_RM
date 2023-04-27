@@ -1,6 +1,9 @@
 # sta309_Midterm_State-Math-Assessments_RM
 This is a dashboard focusing on economic disparities across children who have taken their state mathematics exam, specifically in Ohio
 
+NOTE: You may need to install the "cowplot" package before running this code
+    Code if you need it: install.packages("cowplot")
+
 GOAL
 I had no idea what I wanted to do with this data set, provided by the US Department of Education on 2020-2021 state math test achievement scores, until I saw what some of the categories represented. The first one that jumped out at me was "ECD" which meant "Economically Disadvantaged". I am not sure what exactly determines how a school district, state, or the US Department of Education labels a student as "Economically Disadvantaged" but I wanted to give it a shot. So I attempted to create a dashboard that explains how a childs economic upbringing might affect their state math test. 
 
