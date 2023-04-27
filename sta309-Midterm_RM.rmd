@@ -292,8 +292,8 @@ ohio_regions_schools <-
   xlab("% Economically Disadvantaged") +
   ylab("% at or Above Proficiency in Math") +
   annotate(geom="text", label="Three Rivers Local\nSchool District\n(The school I attended)", 
-           x=.20, y=27, color="goldenrod1", size=3, fontface="bold") +
-  annotate(geom="segment", x=0.15, xend=0.3025, y=32, yend=57.5 ) +
+           x=.20, y=26, color="goldenrod1", size=3, fontface="bold") +
+  annotate(geom="segment", x=0.21, xend=0.3025, y=34.5, yend=57.5 ) +
   theme(legend.position = "right",
         legend.box = "vertical",
         legend.title = element_text("Number of valid entries", size=6),
